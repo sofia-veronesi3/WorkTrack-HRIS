@@ -8,6 +8,7 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Illuminate\http\StreamedResponse;
 
 class AttendanceReportController extends Controller
 {
