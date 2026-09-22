@@ -29,9 +29,33 @@
                 @endforeach
             </select>
         </div>
+        <div>
+    <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Departemen</label>
+    <select name="departement_id" class="rounded-lg border-slate-200 text-sm focus:ring-indigo-500 focus:border-indigo-500">
+        <option value="">-- Semua Departemen --</option>
+        @foreach($departments as $dept)
+            <option value="{{ $dept->id }}" {{ ($departementId ?? '') == $dept->id ? 'selected' : '' }}>
+                {{ $dept->name }}
+            </option>
+        @endforeach
+    </select>
+</div>
         <button type="submit" class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition">
             Tampilkan
         </button>
+        <div class="flex items-center gap-3">
+        <button type="submit" name="action" value="filter" class="px-4 py-2 bg-white border border-slate-300 text-sm font-semibold text-slate-700 rounded-lg hover:bg-slate-50 transition">
+          Filtrar
+        </button>
+        <a href="{{ route('reports.attendance.export', ['month' => $month, 'year' => $year , 'departement_id' => $departementId]) }}"
+         class="px-4 py-2 bg-indigo-600 text-white text-sm font-semibold rounded-lg hover:bg-indigo-700 transition">
+           Exportar CSV
+       </a>
+       <a href="{{ route('reports.attendance') }}"
+        class="px-4 py-2 bg-white border border-slate-300 text-sm font-semibold text-slate-700 rounded-lg hover:bg-slate-50 transition">
+          Limpiar
+       </a>
+       </div>
     </form>
 
     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">

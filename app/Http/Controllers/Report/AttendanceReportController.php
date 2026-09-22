@@ -8,7 +8,8 @@ use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
-use Illuminate\http\StreamedResponse;
+use App\Models\Departemen;
+
 
 class AttendanceReportController extends Controller
 {
@@ -16,8 +17,11 @@ class AttendanceReportController extends Controller
     {
         $month = $request->input('month', Carbon::now()->month);
         $year = $request->input('year', Carbon::now()->year);
+        $departementId = $request->input('departement_id');
 
-        $employees = User::where('role', 'employee')->get();
+    $employees = User::where('role', 'employee')
+        ->when($departementId, fn ($q) => $q->where('departement_id', $departementId))
+        ->get();
 
         $attendances = Attendance::selectRaw("
                 user_id,
@@ -50,7 +54,46 @@ class AttendanceReportController extends Controller
         ]);
 
         $years = range(Carbon::now()->year - 2, Carbon::now()->year + 1);
-
-        return view('reports.attendance', compact('summary', 'month', 'year', 'months', 'years'));
+        $departments = Departemen::orderBy('name')->get();
+        return view('reports.attendance', compact('summary', 'month', 'year', 'months', 'years', 'departments', 'departementId'));
     }
+
+    public function export(Request $request)
+{
+        $month = $request->input('month', Carbon::now()->month);
+        $year = $request->input('year', Carbon::now()->year);
+        $departementId = $request->input('departement_id');
+
+        $attendances = Attendance::with('user')
+        ->whereYear('attendance_date', $year)
+        ->whereMonth('attendance_date', $month)
+        ->when($departementId, fn ($q) => $q->whereHas('user', fn ($q2) => $q2->where('departement_id', $departementId)))
+        ->orderBy('attendance_date', 'asc')
+        ->get();
+
+    $filename = "attendance_report_{$month}_{$year}.csv";
+
+    $headers = [
+        'Content-Type' => 'text/csv',
+        'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+    ];
+
+    return response()->stream(function () use ($attendances) {
+        $handle = fopen('php://output', 'w');
+
+        fputcsv($handle, ['Empleado', 'Fecha', 'Hora Ingreso', 'Hora Salida', 'Estado']);
+
+        foreach ($attendances as $attendance) {
+            fputcsv($handle, [
+                $attendance->user->name ?? 'N/A',
+                $attendance->attendance_date->format('d/m/Y'),
+                $attendance->check_in ?? '-',
+                $attendance->check_out ?? '-',
+                $attendance->status,
+            ]);
+        }
+
+        fclose($handle);
+    }, 200, $headers);
+}
 }
