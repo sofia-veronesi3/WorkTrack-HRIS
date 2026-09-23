@@ -21,6 +21,7 @@ class DatabaseSeeder extends Seeder
             DepartemenSeeder::class,
             PositionSeeder::class,
             UserSeeder::class,
+            AttendanceSeeder::class,
         ]);
     }
 }

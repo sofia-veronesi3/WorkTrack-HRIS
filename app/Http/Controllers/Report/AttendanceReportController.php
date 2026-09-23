@@ -19,7 +19,7 @@ class AttendanceReportController extends Controller
         $year = $request->input('year', Carbon::now()->year);
         $departementId = $request->input('departement_id');
 
-    $employees = User::where('role', 'employee')
+        $employees = User::where('role', 'employee')
         ->when($departementId, fn ($q) => $q->where('departement_id', $departementId))
         ->get();
 
@@ -64,10 +64,10 @@ class AttendanceReportController extends Controller
         $year = $request->input('year', Carbon::now()->year);
         $departementId = $request->input('departement_id');
 
-        $attendances = Attendance::with('user')
-        ->whereYear('attendance_date', $year)
+        $attendances = Attendance::with('user') //busco las asistencias y los datos del empleado 
+        ->whereYear('attendance_date', $year) 
         ->whereMonth('attendance_date', $month)
-        ->when($departementId, fn ($q) => $q->whereHas('user', fn ($q2) => $q2->where('departement_id', $departementId)))
+        ->when($departementId, fn ($q) => $q->whereHas('user', fn ($q2) => $q2->where('departement_id', $departementId))) //si filtre por dpto veo q ese usuario este en ese dpto y lo muestro en la asistencia
         ->orderBy('attendance_date', 'asc')
         ->get();
 
@@ -78,7 +78,7 @@ class AttendanceReportController extends Controller
         'Content-Disposition' => "attachment; filename=\"{$filename}\"",
     ];
 
-    return response()->stream(function () use ($attendances) {
+    return response()->stream(function () use ($attendances) {   //genera la respuesta del archivo como flujo de datos (para no cargar todo en memoria) y lo envia al navegador para descargarlo
         $handle = fopen('php://output', 'w');
 
         fputcsv($handle, ['Empleado', 'Fecha', 'Hora Ingreso', 'Hora Salida', 'Estado']);
